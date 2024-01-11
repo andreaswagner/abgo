@@ -1,5 +1,6 @@
 import './index.css';
 
+import { Home } from './Home';
 document.addEventListener('DOMContentLoaded', function () {
   window.onload = function () {
     window.requestAnimationFrame(function () {
@@ -7,7 +8,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
       window.Webflow ||= [];
       window.Webflow.push(() => {
-        // const app = new Wallet();
+        const app = new Home();
+        app.init();
         //const app = new CloneMe();
         //const app = new DirtyProtest();
         //app.init();
