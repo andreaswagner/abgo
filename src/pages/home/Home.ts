@@ -3,6 +3,8 @@ import { Observer } from 'gsap/Observer';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+import SectionItemsAnimate from '../../animations/SectionItemsAnimate';
+
 // Ensure to register the ScrollTrigger plugin
 gsap.registerPlugin(ScrollTrigger, Observer, ScrollSmoother);
 interface CustomObserver extends Observer {
@@ -68,7 +70,7 @@ export class Home {
     ScrollTrigger.create({
       trigger: '.zwiper-wrapper',
       pin: true,
-      anticipatePin: 1,
+      anticipatePin: 0.1,
       start: 'top top',
       end: '+=50%',
       onLeave: () => {
@@ -91,6 +93,9 @@ export class Home {
         }
       },
     });
+
+    new SectionItemsAnimate();
+    ScrollTrigger.refresh();
   }
   // handle the panel swipe animations
   public gotoPanel(index: number, isScrollingDown: boolean) {
