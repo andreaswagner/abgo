@@ -11,24 +11,63 @@ interface CustomObserver extends Observer {
   savedScroll?: number;
 }
 export class Home {
-  private currentIndex: number;
+  private currentIndex: number = 0;
   private slides: HTMLElement[];
-  private isAnimating: boolean;
-  private intentObserver: Observer;
-  private preventScroll: Observer;
+  private isAnimating: boolean = false;
+  private intentObserver: Observer | undefined;
+  private preventScroll: Observer | undefined;
 
   constructor() {
-    ScrollSmoother.create({
-      smooth: 0.8, // how long (in seconds) it takes to "catch up" to the native scroll position
-      effects: true, // looks for data-speed and data-lag attributes on elements
-      smoothTouch: 1.2, // much shorter smoothing time on touch devices (default is NO smoothing on touch devices)
-      normalizeScroll: true,
-      //speed: speedValue,
-      //ignoreMobileResize: true,
-    });
-    this.isAnimating = false;
-    this.currentIndex = 0;
     this.slides = gsap.utils.toArray('.zwiper-slide') as HTMLElement[];
+    if (!this.isMobileDevice()) {
+      // ScrollSmoother.create({
+      //   smooth: 0.8, // how long (in seconds) it takes to "catch up" to the native scroll position
+      //   effects: true, // looks for data-speed and data-lag attributes on elements
+      //   smoothTouch: 1.2, // much shorter smoothing time on touch devices (default is NO smoothing on touch devices)
+      //   normalizeScroll: true,
+      // });
+      //this.setUpScrollTrigger();
+    } else {
+      alert('mobile');
+    }
+    new SectionItemsAnimate();
+  }
+
+  public init(): void {}
+  private setUpScrollTrigger(): void {
+    // pin swipe section and initiate observer
+
+    ScrollTrigger.create({
+      trigger: '.section_top-stories',
+      onEnterBack: () => {
+        ScrollTrigger.refresh();
+
+        this.currentIndex = 0;
+        gsap.set(this.slides[1], { xPercent: 100 });
+        gsap.set(this.slides[2], { xPercent: 200 });
+        if (this.slides[3]) {
+          gsap.set(this.slides[3], { xPercent: 300 });
+        }
+      },
+    });
+    ScrollTrigger.create({
+      trigger: '.zwiper-wrapper',
+      pin: true,
+      anticipatePin: 0.1,
+      start: 'top top',
+      end: '+=50%',
+
+      onEnter: (self) => {
+        if (this.preventScroll?.isEnabled === false) {
+          self.scroll(self.start);
+          this.preventScroll.enable();
+          this.intentObserver?.enable();
+          this.gotoPanel(this.currentIndex, true);
+        }
+      },
+    });
+
+    ScrollTrigger.refresh();
     gsap.set(this.slides[1], { xPercent: 100 });
     gsap.set(this.slides[2], { xPercent: 200 });
     gsap.set(this.slides, {
@@ -39,7 +78,7 @@ export class Home {
       type: 'wheel,touch',
       onUp: () => !this.isAnimating && this.gotoPanel(this.currentIndex + 1, true),
       onDown: () => !this.isAnimating && this.gotoPanel(this.currentIndex - 1, false),
-      wheelSpeed: -1, // to match mobile behavior, invert the wheel speed
+      wheelSpeed: -5, // to match mobile behavior, invert the wheel speed
       tolerance: 20,
       preventDefault: true,
       onPress: (self) => {
@@ -64,51 +103,19 @@ export class Home {
     });
     this.preventScroll.disable();
   }
+  // Helper method to determine if the user has scrolled enough
 
-  public init(): void {
-    // pin swipe section and initiate observer
-    ScrollTrigger.create({
-      trigger: '.zwiper-wrapper',
-      pin: true,
-      anticipatePin: 0.1,
-      start: 'top top',
-      end: '+=50%',
-      onLeave: () => {
-        gsap.set(this.slides[1], { xPercent: 0 });
-      },
-      onEnter: (self) => {
-        if (this.preventScroll.isEnabled === false) {
-          self.scroll(self.start);
-          this.preventScroll.enable();
-          this.intentObserver.enable();
-          this.gotoPanel(this.currentIndex + 1, true);
-        }
-      },
-      onEnterBack: (self) => {
-        if (this.preventScroll.isEnabled === false) {
-          self.scroll(self.start);
-          this.preventScroll.enable();
-          this.intentObserver.enable();
-          this.gotoPanel(this.currentIndex - 1, false);
-        }
-      },
-    });
-
-    new SectionItemsAnimate();
-    ScrollTrigger.refresh();
-  }
   // handle the panel swipe animations
-  public gotoPanel(index: number, isScrollingDown: boolean) {
-    console.log('gotoPanel', index, isScrollingDown, this.slides.length);
+  private gotoPanel(index: number, isScrollingDown: boolean) {
     this.isAnimating = true;
+
     // return to normal scroll if we're at the end or back up to the start
     if ((index === this.slides.length && isScrollingDown) || (index === -1 && !isScrollingDown)) {
-      console.log('return to normal scroll');
-      this.intentObserver.disable();
-      this.preventScroll.disable();
+      this.intentObserver?.disable();
+      this.preventScroll?.disable();
       this.isAnimating = false;
       // now make it go 1px beyond in the correct direction so that it doesn't trigger onEnter/onEnterBack.
-      this.preventScroll.scrollY(
+      this.preventScroll?.scrollY(
         this.preventScroll.scrollY() + (index === this.slides.length ? 1 : -1)
       );
       return;
@@ -127,5 +134,10 @@ export class Home {
     });
 
     this.currentIndex = index;
+  }
+  private isMobileDevice(): boolean {
+    // Define a breakpoint for mobile devices
+    const mobileBreakpoint = 768; // for example, 768px
+    return window.matchMedia(`(max-width: ${mobileBreakpoint}px)`).matches;
   }
 }

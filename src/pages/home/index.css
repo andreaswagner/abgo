@@ -1,18 +1,9 @@
-#scroll-container {
-    display: flex;
-    overflow-x: scroll;
-    scroll-snap-type: x mandatory; /* Enables snapping */
-    position: relative;
-    height: 100vh;
-    width: 100%;
-    overflow: visible;
+/* Optional - Remove Scroll Bounce */
+body { overscroll-behavior: none; }
 
+@media only screen and (min-width: 768px) {
+  
+   
 }
 
-.zwiper-slide {
-    flex: 0 0 100vw; /* Full viewport width */
-    height: 100vh; /* Adjust height as needed */
-    scroll-snap-align: start;
-    position: absolute;
-    /* Your additional styling */
-}
+
